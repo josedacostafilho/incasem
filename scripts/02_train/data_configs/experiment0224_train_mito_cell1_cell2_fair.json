@@ -1,0 +1,29 @@
+{
+	"2019_06_13_train_mito" : {
+		"file": "cell_1.zarr",
+		"offset": [100, 100, 1400],
+		"shape": [1200, 700, 550],
+		"voxel_size": [5, 5, 5],
+		"raw": "volumes/raw_equalized_0.02",
+		"mask": "volumes/mask",
+		"metric_masks": [
+		    "volumes/metric_masks/mito"],
+	  	"labels" : {
+			"volumes/labels/mito": 1
+		}
+	},
+	"2019_09_19_ROI2_new_train_split" : {
+		"file": "cell_2.zarr",
+		"offset": [100, 100, 1320],
+		"shape": [600, 800, 1100],
+		"voxel_size": [5, 5, 5],
+		"raw": "volumes/raw_equalized_0.02",
+		"mask": "volumes/mask",
+		"metric_masks": [
+			"volumes/metric_masks/mito"
+		],
+		"labels" : {
+			"volumes/labels/mito": 1
+		}
+	}
+}

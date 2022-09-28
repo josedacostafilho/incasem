@@ -1,0 +1,58 @@
+{
+   "2019_06_13_val_mito" : {
+        "file": "cell_1.zarr",
+        "offset": [1300, 100, 350],
+        "shape": [500, 400, 750],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/mito"
+        ],
+        "labels" : {
+            "volumes/labels/mito": 1
+        }
+    },
+    "2019_09_19_val_mito" : {
+        "file": "cell_2.zarr",
+        "offset": [100, 100, 2420],
+        "shape": [400, 800, 340],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/mito"
+        ],
+        "labels" : {
+            "volumes/labels/mito": 1
+        }
+    },
+    "2019_11_4_TR_2462019_Lamp1_Galt" : {
+        "file": "cell_3.zarr",
+        "offset": [100, 1940, 5530],
+        "shape": [600, 540, 750],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/mito"
+        ],
+        "labels" : {
+            "volumes/labels/mito": 1
+        }
+    },
+    "2020_10_14_SUM_Interphase" : {
+        "file": "cell_6.zarr",
+        "offset": [400, 926, 2512],
+        "shape": [240, 476, 528],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/mito"
+        ],
+        "labels" : {
+            "volumes/labels/mito": 1
+        }
+    }
+}

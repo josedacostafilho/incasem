@@ -31,6 +31,7 @@ class TrainingBaselineWithContext:
             reject_min_masked=0.0,
             reject_probability=1.0,
             random_seed=None,
+            downsample_factor=[1, 1, 1],
     ):
         self._data_config = data_config
         self._run_dir = run_dir
@@ -49,6 +50,7 @@ class TrainingBaselineWithContext:
         self._reject_min_masked = reject_min_masked
         self._reject_probability = reject_probability
         self._random_seed = random_seed
+        self._downsample_factor = downsample_factor
 
         self._assemble_pipeline()
 
@@ -80,7 +82,7 @@ class TrainingBaselineWithContext:
         self.request[raw_pos] = gp.ArraySpec(nonspatial=True)
 
         context = (self._input_size -
-                   self._output_size) // self._voxel_size // 2
+                   self._output_size) // (self._voxel_size // gp.Coordinate(self._downsample_factor)) // 2
         sources = fos.pipeline.sources.DataSourcesSemanticWithContext(
             config_file=self._data_config,
             keys=keys,
@@ -103,11 +105,28 @@ class TrainingBaselineWithContext:
                     output_arrays=[keys['BACKGROUND_MASK']]
                 )
                 + fos.gunpowder.BinarizeLabels([keys['BACKGROUND_MASK']])
-
                 + fos.gunpowder.SaveBlockPosition(
                     keys['RAW'],
                     raw_pos
                 )
+                + fos.gunpowder.Downsample(
+                    source=[
+                        keys['RAW'],
+                        keys['LABELS'],
+                        keys['MASK'],
+                        keys['BACKGROUND_MASK'],
+                        keys['METRIC_MASK'],
+                    ],
+                    target=[
+                        keys['RAW'],
+                        keys['LABELS'],
+                        keys['MASK'],
+                        keys['BACKGROUND_MASK'],
+                        keys['METRIC_MASK'],
+                    ],
+                    factor=self._downsample_factor,
+                )
+
                 + fos.gunpowder.RandomLocationBounded(
                     mask=keys['BACKGROUND_MASK'],
                     min_masked=self._reject_min_masked,
@@ -166,28 +185,6 @@ class TrainingBaselineWithContext:
                 min_masked=0.75,
                 reject_probability=0.95,
             )
-        )
-
-        self.downsample = fos.gunpowder.Downsample(
-            source=[
-                keys['RAW'],
-                keys['LABELS'],
-                keys['MASK'],
-                keys['BACKGROUND_MASK'],
-                keys['METRIC_MASK'],
-            ],
-            target=[
-                keys['RAW'],
-                keys['LABELS'],
-                keys['MASK'],
-                keys['BACKGROUND_MASK'],
-                keys['METRIC_MASK'],
-            ],
-            factor=1,
-        )
-        self.pipeline = (
-            self.pipeline
-            + self.downsample
         )
 
         # Augmentation

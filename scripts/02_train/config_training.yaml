@@ -1,6 +1,6 @@
 directories:
-    runs: ~/incasem/training_runs
-    data: ~/incasem/data
+    runs: ~/code/incasem/training_runs
+    data: ~/code/incasem/data
 
 training:
     pipeline: baseline_with_context
@@ -48,7 +48,7 @@ sources:
 
 data:
     voxel_size: [5, 5, 5]
-    downsample_factor: 1
+    downsample_factor: [1, 1, 1]
     num_classes: 2
 
 model:

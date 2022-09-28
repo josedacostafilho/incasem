@@ -24,6 +24,7 @@ class ValidationBaselineWithContext:
             output_size_voxels,
             run_every,
             random_seed=None,
+            downsample_factor=[1, 1, 1],
     ):
         self._data_config = data_config[0]
         self._data_config_name = data_config[1]
@@ -42,6 +43,7 @@ class ValidationBaselineWithContext:
 
         self._run_every = run_every
         self._random_seed = random_seed
+        self._downsample_factor = downsample_factor
 
         self._assemble_pipeline()
 
@@ -65,7 +67,7 @@ class ValidationBaselineWithContext:
         self.request.add(keys['PREDICTIONS'], self._output_size)
 
         context = (self._input_size -
-                   self._output_size) // self._voxel_size // 2
+                   self._output_size) // (self._voxel_size // gp.Coordinate(self._downsample_factor)) // 2
         sources = fos.pipeline.sources.DataSourcesSemanticWithContext(
             config_file=self._data_config,
             keys=keys,
@@ -97,7 +99,7 @@ class ValidationBaselineWithContext:
                 keys['MASK'],
                 keys['METRIC_MASK'],
             ],
-            factor=1,
+            factor=self._downsample_factor,
         )
         self.pipeline = (
             self.pipeline

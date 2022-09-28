@@ -1,0 +1,59 @@
+{
+    "2019_06_13_train_golgi_centre" : {
+        "file": "cell_1.zarr",
+        "offset": [826, 50, 1140],
+        "shape": [468, 650, 510],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/golgi"
+        ],
+        "labels" : {
+            "volumes/labels/golgi": 1
+        }
+    },
+    "2019_06_13_train_golgi_right" : {
+        "file": "cell_1.zarr",
+        "offset": [1200, 300, 776],
+        "shape": [400, 400, 874],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/golgi"
+        ],
+        "labels" : {
+            "volumes/labels/golgi": 1
+        }
+    },
+    "2019_06_13_train_golgi_left_bottom_train" : {
+        "file": "cell_1.zarr",
+        "offset": [216, 350, 1600],
+        "shape": [350, 400, 400],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/golgi"
+        ],
+        "labels" : {
+            "volumes/labels/golgi": 1
+        }
+    },
+    "2019_09_19_left_side_subset": {
+        "file": "cell_2.zarr",
+        "offset": [1100, 400, 900],
+        "shape": [300, 500, 500],
+        "voxel_size": [5, 5, 5],
+        "raw": "volumes/raw_equalized_0.02",
+        "mask": "volumes/mask",
+        "metric_masks": [
+            "volumes/metric_masks/golgi"
+        ],
+        "labels":{
+            "volumes/labels/golgi": 1
+        }
+    }
+}
+

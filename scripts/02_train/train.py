@@ -50,7 +50,6 @@ def model_setup(_config, _run):
                 tuple(i) for i in _config['model']['downsample_factors']
             ),
             activation='ReLU',
-            voxel_size=_config['data']['voxel_size'],
             num_fmaps_out=_config['model']['num_fmaps_out'],
             num_heads=1,
             constant_upsample=_config['model']['constant_upsample'],
@@ -68,7 +67,6 @@ def model_setup(_config, _run):
                 tuple(i) for i in _config['model']['downsample_factors']
             ),
             activation='ReLU',
-            voxel_size=_config['data']['voxel_size'],
             constant_upsample=_config['model']['constant_upsample'],
             padding='valid'
         )
@@ -139,6 +137,7 @@ def training_setup(_config, _run, _seed, run_dir, model):
         reject_probability=float(
             _config['training']['reject']['reject_probability']),
         random_seed=_seed,
+        downsample_factor=[int(f) for f in _config['data']['downsample_factor']],
     )
 
     device = _config['torch']['device']
@@ -149,8 +148,6 @@ def training_setup(_config, _run, _seed, run_dir, model):
     training.train_node.log_every = int(
         _config['training']['log_every'])
 
-    # Downsample
-    training.downsample.factor = int(_config['data']['downsample_factor'])
 
     # Balance Labels
     try:
@@ -271,12 +268,11 @@ def validation_setup(_config, _run, _seed, run_dir, model, val_dataset):
         output_size_voxels=_config['validation']['output_size_voxels'],
         run_every=_config['validation']['validate_every'],
         random_seed=_seed,
+        downsample_factor=[int(f) for f in _config['data']['downsample_factor']],
     )
     device = _config['torch']['device']
     validation.predict.gpus = [] if device == 'cpu' else [int(device)]
 
-    # Downsample
-    validation.downsample.factor = int(_config['data']['downsample_factor'])
 
     # Balance Labels
     try:
@@ -467,10 +463,7 @@ def train(_config, _run, _seed):
     with gp.build(training.pipeline) as p:
 
         # Hack for validation in continued training
-        logger.info((
-            f"Training iteration is {training.train_node.iteration}, "
-            "copying into validation pipeline"
-        ))
+        logger.info(f"Training iteration is {training.train_node.iteration}")
         start_iteration = training.train_node.iteration
 
         # build validation pipelines
@@ -523,6 +516,7 @@ def train(_config, _run, _seed):
 
             if i % _config['validation']['validate_every'] == 0:
                 model.eval()
+                logger.info("Validation phase")
 
                 # loop over validation objects; each one has a pipeline
                 for val_idx, validation in enumerate(validations):
