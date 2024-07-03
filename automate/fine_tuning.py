@@ -24,6 +24,7 @@ def run_fine_tuning(config_path: str, model_id: str, checkpoint_path: str):
     fine_tune_cmd = f"python ../incasem/scripts/02_train/train.py --name example_finetune --start_from {model_id} {checkpoint_path} with config_training.yaml training.data={config_path} validation.data={config_path} torch.device=0 training.iterations=15000"
     run_command(fine_tune_cmd, "Fine-tuning complete!")
 
+@handle_exceptions
 def take_input_and_run_fine_tuning():
     st.title("Incasem Fine-Tuning")
     st.write("Welcome to the Incasem fine-tuning interface")
