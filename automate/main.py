@@ -2,6 +2,7 @@ import logging
 
 import streamlit as st
 from data_download import download_data
+from fine_tuning import take_input_and_run_fine_tuning
 from incasem_setup import (export_env, handle_exceptions, setup_conda,
                            setup_environment)
 from mongodb_setup import setup_mongodb
@@ -17,7 +18,7 @@ logger=logging.getLogger(__name__)
 def main():
     st.sidebar.title("Incasem Navigation")
     app_mode = st.sidebar.selectbox("Choose the app mode",
-        ["Setup", "Data Download", "MongoDB Setup", "Omniboard Setup", "Prediction", "View Cells"])
+        ["Setup", "Data Download", "MongoDB Setup", "Omniboard Setup", "Prediction", "Fine Tuning", "View Cells"])
 
     if app_mode == "Setup":
         st.title("Incasem Setup")
@@ -49,6 +50,8 @@ def main():
         take_input_and_run_predictions()
     elif app_mode == "View Cells":
         view_cells_and_flatten_them()
+    elif app_mode == "Fine Tuning":
+        take_input_and_run_fine_tuning()
 
     # Display workflow
     st.sidebar.title("Workflow Overview")
@@ -61,6 +64,7 @@ def main():
     st.sidebar.write("4) Omniboard Setup")
     st.sidebar.write("5) Prediction")
     st.sidebar.write("6) View Cells")
+    st.sidebar.write("7) Fine Tuning")
 
 
 if __name__ == "__main__":

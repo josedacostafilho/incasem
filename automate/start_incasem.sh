@@ -65,13 +65,6 @@ setup_environment() {
 
   echo "Installing dependencies"
   install_dependencies
-  # pip install zarr scikit-learn pyyaml quilt3 tensorboardX tensorboard configargparse protobuf daisy
-  # pip install git+https://github.com/kirchhausenlab/sacred@master
-  # pip install git+https://github.com/funkelab/funlib.learn.torch@master
-  # pip install git+https://github.com/funkelab/funlib.persistence@master
-  # pip install git+https://github.com/funkelab/funlib.show.neuroglancer.git@master
-  # pip install git+https://github.com/bentaculum/gunpowder@total_roi_with_nonspatial_array
-
   python3 -m pip install -r ../requirements.txt
 
   conda env export > environment.yml

@@ -1,3 +1,4 @@
+
 import os
 import random
 import subprocess
@@ -18,35 +19,18 @@ def prepare_annotations(input_path: str, output_path: str):
     run_command(exclusion_cmd, "Metric exclusion zone created!")
 
 @handle_exceptions
-def run_fine_tuning(config_path: str, model_id: str, checkpoint_path: str, output_path: str):
+def run_fine_tuning(config_path: str, model_id: str, checkpoint_path: str):
     st.write("Running fine-tuning...")
     fine_tune_cmd = f"python ../incasem/scripts/02_train/train.py --name example_finetune --start_from {model_id} {checkpoint_path} with config_training.yaml training.data={config_path} validation.data={config_path} torch.device=0 training.iterations=15000"
     run_command(fine_tune_cmd, "Fine-tuning complete!")
-    with st.echo():
-        st.write("Starting TensorBoard...")
-        tensorboard_cmd = f"tensorboard --logdir={output_path}/tensorboard --host 0.0.0.0 --port 6006"
-        subprocess.Popen(tensorboard_cmd, shell=True)
-        st.write("TensorBoard running at http://localhost:6006")
 
-        st.write("Starting Omniboard...")
-        omniboard_cmd = f"omniboard -m localhost:27017:incasem_trainings"
-        subprocess.Popen(omniboard_cmd, shell=True)
-        st.write("Omniboard running at http://localhost:9000")
-
-def download_training_data():
-    st.write("Downloading training data...")
-    download_cmd = "aws s3 cp s3://path-to-your-dataset/cell_3.zarr ./datasets/cell_3.zarr --recursive"
-    run_command(download_cmd, "Download complete!")
-
+@handle_exceptions
 def take_input_and_run_fine_tuning():
     st.title("Incasem Fine-Tuning")
     st.write("Welcome to the Incasem fine-tuning interface")
 
     input_path = st.text_input("Enter the input path for annotations", "")
     output_path = st.text_input("Enter the output path for zarr format", "")
-
-    if st.button('Download Training Data'):
-        download_training_data()
 
     if not validate_tiff_filename(input_path):
         st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
@@ -83,9 +67,8 @@ def take_input_and_run_fine_tuning():
             "raw": entry["raw"],
             "labels": entry["labels"]
         }
-
-    random_file_number = random.randrange(0, 1000)
-    file_name = st.text_input("Enter the name of the inference file otherwise we will generate a random file name for you", f"inference-{random_file_number}")
+    random_file_number=random.randrange(0, 1000)
+    file_name=st.text_input("Enter the name of the inference file otherwise we will generate a random file name for you", f"inference-{random_file_number}")
 
     if st.button('Create Configuration'):
         config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
@@ -110,11 +93,11 @@ def take_input_and_run_fine_tuning():
             st.success("Annotations prepared successfully!")
 
         if st.button('Run Fine-Tuning'):
-            run_fine_tuning(config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, output_path=output_path)
+            run_fine_tuning(config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path)
             st.success("Fine-tuning process is complete!")
 
-# def main():
-#     take_input_and_run_fine_tuning()
-#
-# if __name__ == '__main__':
-#     main()
+def main():
+    take_input_and_run_fine_tuning()
+
+if __name__ == '__main__':
+    main()
