@@ -1,7 +1,5 @@
-
 import os
 import random
-import subprocess
 
 import streamlit as st
 from incasem_setup import handle_exceptions
@@ -9,33 +7,50 @@ from utils import create_config_file, run_command, validate_tiff_filename
 
 
 @handle_exceptions
-def prepare_annotations(input_path: str, output_path: str):
-    st.write("Preparing annotations...")
-    convert_cmd = f"python ../incasem/scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path} -d volumes/labels/er --dtype uint32"
-    run_command(convert_cmd, "Conversion to zarr format complete for annotations!")
-    
-    st.write("Creating metric exclusion zone...")
-    exclusion_cmd = f"python ../incasem/scripts/01_data_formatting/60_create_metric_mask.py -f {output_path} -d volumes/labels/er --out_dataset volumes/metric_masks/er --exclude_voxels_inwards 2 --exclude_voxels_outwards 2"
-    run_command(exclusion_cmd, "Metric exclusion zone created!")
+def run_prediction(input_path: str, output_path: str, volume_name: str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
+    st.subheader("Run Prediction")
 
-@handle_exceptions
-def run_fine_tuning(config_path: str, model_id: str, checkpoint_path: str):
-    st.write("Running fine-tuning...")
-    fine_tune_cmd = f"python ../incasem/scripts/02_train/train.py --name example_finetune --start_from {model_id} {checkpoint_path} with config_training.yaml training.data={config_path} validation.data={config_path} torch.device=0 training.iterations=15000"
-    run_command(fine_tune_cmd, "Fine-tuning complete!")
+    if is_tiff:
+        st.write("Checking the size of the TIFF file...")
+        file_size = os.path.getsize(input_path)
+        st.write(f"File size: {file_size} bytes")
 
-def take_input_and_run_fine_tuning():
-    st.title("Incasem Fine-Tuning")
-    st.write("Welcome to the Incasem fine-tuning interface")
+        if file_size > 10 * 1024 * 1024:  # 10 GB
+            st.write("Large TIFF file detected. Using Dask for conversion...")
+            convert_cmd = f"python ../incasem/scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
+        else:
+            st.write("Converting TIFF to zarr format...")
+            convert_cmd = f"python ../incasem/scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
 
-    input_path = st.text_input("Enter the input path for annotations", "")
-    output_path = st.text_input("Enter the output path for zarr format", "")
+        run_command(convert_cmd, "Conversion to zarr format complete!")
 
-    if not validate_tiff_filename(input_path):
+    st.write("Equalizing intensity histogram of the data...")
+    equalize_cmd = f"python ../incasem/scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
+    run_command(equalize_cmd, "Histogram equalization complete!")
+
+    if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
+        st.write("Opening Neuroglancer...")
+        neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
+        run_command(neuroglancer_cmd, "Neuroglancer opened!")
+
+    st.write("Running prediction...")
+    predict_cmd = f"python ../incasem/scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
+    run_command(predict_cmd, "Prediction complete!")
+
+def take_input_and_run_predictions():
+    st.title("Incasem Prediction")
+    st.write("Welcome to the Incasem prediction interface")
+
+    file_type = st.radio("Select file type", ('TIFF', 'ZARR'))
+    input_path = st.text_input("Enter the input path", "")
+    output_path = st.text_input("Enter the output path", "")
+    volume_name = st.text_input("Enter the name of the volume", "")
+
+    if file_type == 'TIFF' and not validate_tiff_filename(input_path):
         st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
         return
 
-    st.write("Create fine-tuning configuration entries")
+    st.write("Create prediction configuration entries")
     config = {}
     config_entries = []
 
@@ -71,6 +86,7 @@ def take_input_and_run_fine_tuning():
 
     if st.button('Create Configuration'):
         config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
+
         st.write("Configuration file created successfully!")
 
         st.write("Choose a model")
@@ -87,16 +103,12 @@ def take_input_and_run_fine_tuning():
         model_id = model_options[model_choice]
         checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
 
-        if st.button('Prepare Annotations'):
-            prepare_annotations(input_path=input_path, output_path=output_path)
-            st.success("Annotations prepared successfully!")
+        if st.button('Run Prediction'):
+            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name, config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=(file_type == 'TIFF'))
+            st.success("Prediction process is complete!")
 
-        if st.button('Run Fine-Tuning'):
-            run_fine_tuning(config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path)
-            st.success("Fine-tuning process is complete!")
-
-def main():
-    take_input_and_run_fine_tuning()
-
-if __name__ == '__main__':
-    main()
+# def main():
+#     take_input_and_run_predictions()
+#
+# if __name__ == '__main__':
+#     main()
