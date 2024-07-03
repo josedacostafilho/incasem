@@ -8,6 +8,7 @@ from incasem_setup import (export_env, handle_exceptions, setup_conda,
 from mongodb_setup import setup_mongodb
 from omniboard_setup import setup_omniboard
 from prediction import take_input_and_run_predictions
+from training_run import take_input_and_create_configs
 from view import view_cells_and_flatten_them
 
 logging.basicConfig(filename="main_workflow_errors.log",encoding='utf-8',level=logging.DEBUG)
@@ -18,7 +19,7 @@ logger=logging.getLogger(__name__)
 def main():
     st.sidebar.title("Incasem Navigation")
     app_mode = st.sidebar.selectbox("Choose the app mode",
-        ["Setup", "Data Download", "MongoDB Setup", "Omniboard Setup", "Prediction", "Fine Tuning", "View Cells"])
+        ["Setup", "Data Download", "MongoDB Setup", "Omniboard Setup", "Prediction", "Fine Tuning", "View Cells", "Training"])
 
     if app_mode == "Setup":
         st.title("Incasem Setup")
@@ -52,7 +53,8 @@ def main():
         view_cells_and_flatten_them()
     elif app_mode == "Fine Tuning":
         take_input_and_run_fine_tuning()
-
+    elif app_mode == "Training":
+        take_input_and_create_configs()        
     # Display workflow
     st.sidebar.title("Workflow Overview")
     st.sidebar.markdown("### Step-by-Step Guide")
@@ -64,8 +66,8 @@ def main():
     st.sidebar.write("4) Omniboard Setup")
     st.sidebar.write("5) Prediction")
     st.sidebar.write("6) View Cells")
-    st.sidebar.write("7) Fine Tuning")
-
+    st.sidebar.write("Fine Tuning")
+    st.sidebar.write("Run Training")
 
 if __name__ == "__main__":
     try:
