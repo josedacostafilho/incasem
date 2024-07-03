@@ -1,18 +1,13 @@
-import json
-import logging
 import os
-import re
-import subprocess
+import random
 
 import streamlit as st
 from incasem_setup import handle_exceptions
+from utils import create_config_file, run_command, validate_tiff_filename
 
-logging.basicConfig(level=logging.INFO)
-logging.basicConfig(filename="prediction.log", encoding='utf-8', level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 @handle_exceptions
-def run_prediction(input_path: str, output_path: str, volume_name:str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
+def run_prediction(input_path: str, output_path: str, volume_name: str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
     st.subheader("Run Prediction")
 
     if is_tiff:
@@ -22,58 +17,40 @@ def run_prediction(input_path: str, output_path: str, volume_name:str, config_pa
 
         if file_size > 10 * 1024 * 1024:  # 10 GB
             st.write("Large TIFF file detected. Using Dask for conversion...")
-            # TODO: ask users for the TIFF Volume name
             convert_cmd = f"python ../incasem/scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
         else:
             st.write("Converting TIFF to zarr format...")
             convert_cmd = f"python ../incasem/scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
 
-        subprocess.run(convert_cmd, shell=True, check=True)
-        st.write("Conversion to zarr format complete!")
+        run_command(convert_cmd, "Conversion to zarr format complete!")
 
     st.write("Equalizing intensity histogram of the data...")
     equalize_cmd = f"python ../incasem/scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
-    subprocess.run(equalize_cmd, shell=True, check=True)
-    st.write("Histogram equalization complete!")
+    run_command(equalize_cmd, "Histogram equalization complete!")
 
     if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
         st.write("Opening Neuroglancer...")
         neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
-        subprocess.run(neuroglancer_cmd, shell=True, check=True)
+        run_command(neuroglancer_cmd, "Neuroglancer opened!")
 
     st.write("Running prediction...")
     predict_cmd = f"python ../incasem/scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
-    subprocess.run(predict_cmd, shell=True, check=True)
-    st.success("Prediction complete!")
+    run_command(predict_cmd, "Prediction complete!")
 
- 
-@handle_exceptions
-def create_config_file(output_path: str, config: dict) -> str:
-    config_path = os.path.join(output_path, "data_config.json")
-    with open(config_path, 'w') as f:
-        json.dump(config, f, indent=4)
-    return config_path
-
-@handle_exceptions
-def validate_tiff_filename(filename: str) -> bool:
-    return bool(re.match(r'.*_(\d+).*\.tif$', filename))
-
-
-@handle_exceptions
-def take_input_and_run_predictions() -> None:
+def take_input_and_run_predictions():
     st.title("Incasem Prediction")
     st.write("Welcome to the Incasem prediction interface")
 
     file_type = st.radio("Select file type", ('TIFF', 'ZARR'))
-    input_path = st.text_input("Enter the input path for images", "")
-    output_path = st.text_input("Enter the output path for zarr format", "")
-    volume_name=st.text_input("Enter the volume name", "")
-    if file_type == 'TIFF':
-        if not validate_tiff_filename(input_path):
-            st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
-            return
+    input_path = st.text_input("Enter the input path", "")
+    output_path = st.text_input("Enter the output path", "")
+    volume_name = st.text_input("Enter the name of the volume", "")
 
-    st.write("Create data configuration entries")
+    if file_type == 'TIFF' and not validate_tiff_filename(input_path):
+        st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
+        return
+
+    st.write("Create prediction configuration entries")
     config = {}
     config_entries = []
 
@@ -85,7 +62,6 @@ def take_input_and_run_predictions() -> None:
             "path": "",
             "name": "",
             "raw": "",
-            "mask": "",
             "labels": {}
         })
 
@@ -94,7 +70,6 @@ def take_input_and_run_predictions() -> None:
             entry['path'] = st.text_input(f"Enter file path for entry {i+1}", entry['path'])
             entry['name'] = st.text_input(f"Enter ROI name for entry {i+1}", entry['name'])
             entry['raw'] = st.text_input(f"Enter raw data path for entry {i+1}", entry['raw'])
-            entry['mask'] = st.text_input(f"Enter mask path for entry {i+1}", entry['mask'])
             label_key = st.text_input(f"Enter label key for entry {i+1}", "")
             label_value = st.number_input(f"Enter label value for entry {i+1}", value=1)
             if label_key:
@@ -104,30 +79,32 @@ def take_input_and_run_predictions() -> None:
         config[entry["path"]] = {
             "name": entry["name"],
             "raw": entry["raw"],
-            "mask": entry["mask"],
             "labels": entry["labels"]
         }
+    random_file_number=random.randrange(0, 1000)
+    file_name=st.text_input("Enter the name of the inference file otherwise we will generate a random file name for you", f"inference-{random_file_number}")
 
     if st.button('Create Configuration'):
-        config_path = create_config_file(output_path, config)
+        config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
+
         st.write("Configuration file created successfully!")
 
         st.write("Choose a model")
         model_options = {
-            "FIB-SEM Chemical Fixation          Mitochondria (CF, 5x5x5)": "1847",
-            "FIB-SEM Chemical Fixation          Golgi Apparatus (CF, 5x5x5)": "1837",
-            "FIB-SEM Chemical Fixation          Endoplasmic Reticulum (CF, 5x5x5)": "1841",
-            "FIB-SEM High-Pressure Freezing     Mitochondria (HPF, 4x4x4)": "1675",
-            "FIB-SEM High-Pressure Freezing     Endoplasmic Reticulum (HPF, 4x4x4)": "1669",
-            "FIB-SEM High-Pressure Freezing     Clathrin-Coated Pits (HPF, 5x5x5)": "1986",
-            "FIB-SEM High-Pressure Freezing     Nuclear Pores (HPF, 5x5x5)": "2000"
+            "FIB-SEM Chemical Fixation Mitochondria (CF, 5x5x5)": "1847",
+            "FIB-SEM Chemical Fixation Golgi Apparatus (CF, 5x5x5)": "1837",
+            "FIB-SEM Chemical Fixation Endoplasmic Reticulum (CF, 5x5x5)": "1841",
+            "FIB-SEM High-Pressure Freezing Mitochondria (HPF, 4x4x4)": "1675",
+            "FIB-SEM High-Pressure Freezing Endoplasmic Reticulum (HPF, 4x4x4)": "1669",
+            "FIB-SEM High-Pressure Freezing Clathrin-Coated Pits (HPF, 5x5x5)": "1986",
+            "FIB-SEM High-Pressure Freezing Nuclear Pores (HPF, 5x5x5)": "2000"
         }
         model_choice = st.selectbox("Select a model", list(model_options.keys()))
         model_id = model_options[model_choice]
-        checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_1841_er_CF.pt"
+        checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
 
         if st.button('Run Prediction'):
-            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name,config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=file_type == 'TIFF')
+            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name, config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=(file_type == 'TIFF'))
             st.success("Prediction process is complete!")
 
 
