@@ -27,22 +27,22 @@ def run_prediction(input_path: str, output_path: str, config_path: str, model_id
             st.write("Converting TIFF to zarr format...")
             convert_cmd = f"python ../incasem/scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
 
-        subprocess.run(convert_cmd, shell=True)
+        subprocess.run(convert_cmd, shell=True, check=True)
         st.write("Conversion to zarr format complete!")
 
     st.write("Equalizing intensity histogram of the data...")
     equalize_cmd = f"python ../incasem/scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
-    subprocess.run(equalize_cmd, shell=True)
+    subprocess.run(equalize_cmd, shell=True, check=True)
     st.write("Histogram equalization complete!")
 
     if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
         st.write("Opening Neuroglancer...")
         neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
-        subprocess.run(neuroglancer_cmd, shell=True)
+        subprocess.run(neuroglancer_cmd, shell=True, check=True)
 
     st.write("Running prediction...")
     predict_cmd = f"python ../incasem/scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
-    subprocess.run(predict_cmd, shell=True)
+    subprocess.run(predict_cmd, shell=True, check=True)
     st.success("Prediction complete!")
 
 @handle_exceptions

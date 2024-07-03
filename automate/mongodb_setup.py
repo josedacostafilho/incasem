@@ -6,7 +6,7 @@ from incasem_setup import handle_exceptions
 
 def is_mongodb_installed() -> bool:
     """Run a subprocess to see if MongoDB is installed or not"""
-    return subprocess.run(['command', '-v', 'mongod'], capture_output=True, text=True, shell=True).returncode == 0
+    return subprocess.run(['command', '-v', 'mongod'], capture_output=True, text=True, shell=True, check=True).returncode == 0
 
 @handle_exceptions
 def setup_mongodb():
@@ -17,16 +17,16 @@ def setup_mongodb():
     else:
         with st.echo():
             st.write("MongoDB is not installed. Installing MongoDB ....")
-            subprocess.run("brew tap mongodb/brew", shell=True)
-            subprocess.run("brew install mongodb-community@4.4", shell=True)
+            subprocess.run("brew tap mongodb/brew", shell=True, check=True)
+            subprocess.run("brew install mongodb-community@4.4", shell=True, check=True)
     
     st.write("Starting MongoDB service...")
     with st.echo():
-        subprocess.run("brew services start mongodb-community", shell=True)
+        subprocess.run("brew services start mongodb-community", shell=True, check=True)
     
     st.write("Downloading models...")
     with st.echo():
-        subprocess.run("cd ../../incasem; python download_models.py", shell=True)
+        subprocess.run("cd ../incasem; python download_models.py", shell=True, check=True)
     
     st.write("MongoDB setup complete!")
 
