@@ -25,7 +25,7 @@ def list_zarr_components(zarr_file_path):
     if volumes_path in root:
         volumes = root[volumes_path]
         for key in volumes:
-            if key == 'labels' or key == 'predictions' or key.startswith('raw_'):
+            if key == 'labels' or key == 'predictions' or key.startswith('raw'):
                 if isinstance(volumes[key], zarr.Group):
                     for sub_key in volumes[key]:
                         components.append(f"{volumes_path}/{key}/{sub_key}")
@@ -62,4 +62,4 @@ def view_cells_and_flatten_them():
                                 if st.button('Run Neuroglancer'):
                                     subprocess.run(neuroglancer_cmd, shell=True)
                                     st.success("Neuroglancer command executed!")
-
+## TODO: Add segmentation

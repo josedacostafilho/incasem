@@ -12,7 +12,7 @@ logging.basicConfig(filename="prediction.log", encoding='utf-8', level=logging.D
 logger = logging.getLogger(__name__)
 
 @handle_exceptions
-def run_prediction(input_path: str, output_path: str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
+def run_prediction(input_path: str, output_path: str, volume_name:str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
     st.subheader("Run Prediction")
 
     if is_tiff:
@@ -22,6 +22,7 @@ def run_prediction(input_path: str, output_path: str, config_path: str, model_id
 
         if file_size > 10 * 1024 * 1024:  # 10 GB
             st.write("Large TIFF file detected. Using Dask for conversion...")
+            # TODO: ask users for the TIFF Volume name
             convert_cmd = f"python ../incasem/scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
         else:
             st.write("Converting TIFF to zarr format...")
@@ -66,7 +67,7 @@ def take_input_and_run_predictions() -> None:
     file_type = st.radio("Select file type", ('TIFF', 'ZARR'))
     input_path = st.text_input("Enter the input path for images", "")
     output_path = st.text_input("Enter the output path for zarr format", "")
-
+    volume_name=st.text_input("Enter the volume name", "")
     if file_type == 'TIFF':
         if not validate_tiff_filename(input_path):
             st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
@@ -126,7 +127,7 @@ def take_input_and_run_predictions() -> None:
         checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_1841_er_CF.pt"
 
         if st.button('Run Prediction'):
-            run_prediction(input_path, output_path, config_path, model_id, checkpoint_path, file_type == 'TIFF')
+            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name,config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, file_type == 'TIFF')
             st.success("Prediction process is complete!")
 
 

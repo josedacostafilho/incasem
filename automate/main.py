@@ -2,7 +2,8 @@ import logging
 
 import streamlit as st
 from data_download import download_data
-from incasem_setup import export_env, setup_conda, setup_environment
+from incasem_setup import (export_env, handle_exceptions, setup_conda,
+                           setup_environment)
 from mongodb_setup import setup_mongodb
 from omniboard_setup import setup_omniboard
 from prediction import take_input_and_run_predictions
@@ -12,6 +13,7 @@ logging.basicConfig(filename="main_workflow_errors.log",encoding='utf-8',level=l
 logging.basicConfig(level=logging.INFO)
 logger=logging.getLogger(__name__)
 
+@handle_exceptions
 def main():
     st.sidebar.title("Incasem Navigation")
     app_mode = st.sidebar.selectbox("Choose the app mode",
