@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import streamlit as st
 import zarr
@@ -54,4 +55,11 @@ def view_cells_and_flatten_them():
                             if selected_components:
                                 st.write("Selected components:")
                                 st.write(selected_components)
+                                neuroglancer_cmd = f"neuroglancer -f {selected_file} -d " + ' '.join(selected_components)
+                                st.write("Neuroglancer Command:")
+                                st.code(neuroglancer_cmd, language='bash')
+
+                                if st.button('Run Neuroglancer'):
+                                    subprocess.run(neuroglancer_cmd, shell=True)
+                                    st.success("Neuroglancer command executed!")
 

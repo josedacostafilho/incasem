@@ -45,6 +45,7 @@ def run_prediction(input_path: str, output_path: str, config_path: str, model_id
     subprocess.run(predict_cmd, shell=True, check=True)
     st.success("Prediction complete!")
 
+ 
 @handle_exceptions
 def create_config_file(output_path: str, config: dict) -> str:
     config_path = os.path.join(output_path, "data_config.json")
