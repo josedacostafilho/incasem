@@ -127,7 +127,7 @@ def take_input_and_run_predictions() -> None:
         checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_1841_er_CF.pt"
 
         if st.button('Run Prediction'):
-            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name,config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, file_type == 'TIFF')
+            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name,config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=file_type == 'TIFF')
             st.success("Prediction process is complete!")
 
 

@@ -33,6 +33,16 @@ def list_zarr_components(zarr_file_path):
                     components.append(f"{volumes_path}/{key}")
     return components
 
+
+def find_segmentation_folder(selected_components, selected_file):
+    for component in selected_components:
+        if component.startswith('volumes/labels/') or component.startswith('volumes/predictions/'):
+            label_key = component.split('/')[2]
+            prediction_path = os.path.join(selected_file, f"volumes/predictions/{label_key}/segmentation")
+            if os.path.exists(prediction_path):
+                return f"volumes/predictions/{label_key}/segmentation"
+    return None
+
 def view_cells_and_flatten_them(): 
     st.title("Zarr File Explorer")
 
@@ -55,6 +65,11 @@ def view_cells_and_flatten_them():
                             if selected_components:
                                 st.write("Selected components:")
                                 st.write(selected_components)
+                                
+                                segementation_folder=find_segmentation_folder(selected_components, selected_file)
+                                if segementation_folder:
+                                    selected_components.append(segementation_folder)
+
                                 neuroglancer_cmd = f"neuroglancer -f {selected_file} -d " + ' '.join(selected_components)
                                 st.write("Neuroglancer Command:")
                                 st.code(neuroglancer_cmd, language='bash')
