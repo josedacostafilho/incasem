@@ -29,11 +29,11 @@ def run_training(train_config_path: str, val_config_path: str, model_name: str, 
     st.write("Creating metric masks...")
     for cell_path in cell_paths:
         cell_name = os.path.basename(cell_path.rstrip('/'))
-        mask_cmd = f"python ../scripts/01_data_formatting/60_create_metric_mask.py -f {cell_path}/{cell_name}.zarr -d volumes/labels/er --out_dataset volumes/metric_masks/er --exclude_voxels_inwards 2 --exclude_voxels_outwards 2"
+        mask_cmd = f"python ./scripts/01_data_formatting/60_create_metric_mask.py -f {cell_path}/{cell_name}.zarr -d volumes/labels/er --out_dataset volumes/metric_masks/er --exclude_voxels_inwards 2 --exclude_voxels_outwards 2"
         run_command(mask_cmd, f"Metric mask created for {cell_name}!")
 
     st.write("Running training...")
-    train_cmd = f"python ../scripts/02_train/train.py --name {model_name} with config_train.yaml 'train.data={train_config_path}' 'train.validation={val_config_path}'"
+    train_cmd = f"python ./scripts/02_train/train.py --name {model_name} with config_train.yaml 'train.data={train_config_path}' 'train.validation={val_config_path}'"
     run_command(train_cmd, "Training complete!")
 
 

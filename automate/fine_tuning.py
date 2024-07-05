@@ -115,9 +115,7 @@ def take_input_and_run_fine_tuning() -> None:
             "shape":[0,0,0],
             "voxel_size":[5,5,5],
             "raw": "volumes/raw_equalized_0.02",
-            "labels": {
-            "volumes/labels/mito": 1
-            }
+            "labels": {}
         })
 
     for i, entry in enumerate(st.session_state['config_entries']):
@@ -134,6 +132,10 @@ def take_input_and_run_fine_tuning() -> None:
             entry["voxel_size"]=[st.number_input(f"Enter voxel_size z for entry {i+1}", value=entry['voxel_size'][0]),
                                st.number_input(f"Enter voxel_size y for entry {i+1}", value=entry['voxel_size'][1]),
                                st.number_input(f"Enter voxel_size x for entry {i+1}", value=entry['voxel_size'][2])]
+            label_key = st.text_input(f"Enter label key for training entry {i+1}", "")
+            label_value = st.number_input(f"Enter label value for training entry {i+1}", value=1)
+            if label_key:
+                entry['labels'][label_key] = label_value
 
     for entry in st.session_state['config_entries']:
         config[entry["nickname"]] = {
