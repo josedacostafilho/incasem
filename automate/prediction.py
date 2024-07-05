@@ -1,10 +1,12 @@
 import os
 import random
+import subprocess
 
 import streamlit as st
 from incasem_setup import handle_exceptions
 from utils import (convert_tiff_to_zarr, create_config_file, run_command,
                    validate_tiff_filename)
+from view import view_cells_and_flatten_them
 
 
 @handle_exceptions
@@ -23,19 +25,13 @@ def run_prediction(input_path: str, output_path: str, volume_name: str, config_p
     st.subheader("Run Prediction")
 
     if is_tiff:
-        convert_tiff_to_zarr(input_path=input_path, output_path=output_path, volume_name=volume_name) 
-    else:
+        convert_tiff_to_zarr(input_path=input_path, output_path=output_path, volume_name=volume_name)
         st.write("Equalizing intensity histogram of the data...")
-        equalize_cmd = f"python ../scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
+        equalize_cmd = f"python ./scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
         run_command(equalize_cmd, "Histogram equalization complete!")
-
-        if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
-            st.write("Opening Neuroglancer...")
-            neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
-            run_command(neuroglancer_cmd, "Neuroglancer opened!")
-
+            
         st.write("Running prediction...")
-        predict_cmd = f"python ../scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
+        predict_cmd = f"python ./scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
         run_command(predict_cmd, "Prediction complete!")
 
 @handle_exceptions
@@ -50,6 +46,9 @@ def take_input_and_run_predictions():
     """
     st.title("Incasem Prediction")
     st.write("Welcome to the Incasem prediction interface")
+
+    cmd="../omniboard_environment/bin/activate"
+    subprocess.run(cmd, shell=True)
 
     file_type = st.radio("Select file type", ('TIFF', 'ZARR'))
     input_path = st.text_input("Enter the input path", "")
@@ -115,7 +114,7 @@ def take_input_and_run_predictions():
         }
         model_choice = st.selectbox("Select a model", list(model_options.keys()))
         submit_button = st.form_submit_button("Run Prediction")
-
+    
     if submit_button:
         config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
         st.write("Configuration file created successfully!")
@@ -125,3 +124,7 @@ def take_input_and_run_predictions():
 
         run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name, config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=(file_type == 'TIFF'))
         st.success("Prediction process is complete!")
+    # res = st.button("Open Neuroglancer")
+    # if res:
+    view_cells_and_flatten_them() 
+

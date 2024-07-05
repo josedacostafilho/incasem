@@ -73,7 +73,7 @@ def view_cells_and_flatten_them():
     5. Constructs a Neuroglancer command based on selected components.
     6. Executes Neuroglancer command when requested.
     """
-    st.title("Zarr File Explorer")
+    st.title("See files in Neuroglancer Zarr File Explorer")
 
     data_dir = st.text_input("Enter the data directory:", value='../data')
 

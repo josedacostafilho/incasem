@@ -56,6 +56,7 @@ def setup_conda():
         subprocess.run("chmod +x Miniconda3-latest-Linux-x86_64.sh", shell=True, check=True)
         subprocess.run("bash Miniconda3-latest-Linux-x86_64.sh", shell=True, check=True)
         subprocess.run("export PATH=~/miniconda3/bin:$PATH", shell=True, check=True)
+        subprocess.run("export PYTHONPATH=../.") 
         subprocess.run("source ~/.bashrc", shell=True, check=True)
 
 @handle_exceptions
