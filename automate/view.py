@@ -104,5 +104,17 @@ def view_cells_and_flatten_them():
                                 st.code(neuroglancer_cmd, language='bash')
 
                                 if st.button('Run Neuroglancer'):
-                                    subprocess.run(neuroglancer_cmd, shell=True)
-                                    st.success("Neuroglancer command executed!")
+                                    #subprocess.run(neuroglancer_cmd, shell=True)
+                                    with st.echo():
+                                        subprocess.Popen(neuroglancer_cmd, shell=True)
+                            
+                                        st.success("Neuroglancer command executed!")
+# with st.echo():
+#         st.write("Starting Neuroglancer...")
+#         st.write("TensorBoard running at http://localhost:6006")
+#
+#         st.write("Starting Omniboard...")
+#         omniboard_cmd = f"omniboard -m localhost:27017:incasem_trainings"
+#         subprocess.Popen(omniboard_cmd, shell=True)
+#         st.write("Omniboard running at http://localhost:9000")
+#

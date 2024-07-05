@@ -13,11 +13,11 @@ from utils import (convert_tiff_to_zarr, create_config_file, run_command,
 def prepare_annotations(input_path: str, output_path: str):
     """If the file type if tiff, users can convert them to zarr format and if they want, they can also make a metric exclusion zone"""
     st.write("Preparing annotations...")
-    convert_cmd = f"python ../scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path} -d volumes/labels/er --dtype uint32"
+    convert_cmd = f"python ./scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path} -d volumes/labels/er --dtype uint32"
     run_command(convert_cmd, "Conversion to zarr format complete for annotations!")
     
     st.write("Creating metric exclusion zone...")
-    exclusion_cmd = f"python ../scripts/01_data_formatting/60_create_metric_mask.py -f {output_path} -d volumes/labels/er --out_dataset volumes/metric_masks/er --exclude_voxels_inwards 2 --exclude_voxels_outwards 2"
+    exclusion_cmd = f"python ./scripts/01_data_formatting/60_create_metric_mask.py -f {output_path} -d volumes/labels/er --out_dataset volumes/metric_masks/er --exclude_voxels_inwards 2 --exclude_voxels_outwards 2"
     run_command(exclusion_cmd, "Metric exclusion zone created!")
 
 @handle_exceptions
@@ -26,7 +26,7 @@ def run_fine_tuning(config_path: str, model_id: str, checkpoint_path: str, outpu
     st.write("Running fine-tuning...")
     name=st.text_input("Enter the name of the fine tuned file ", "example_finetune", help="Default name set to example_finetune" )
     iterations=st.number_input(label="Enter the number of iterations you want to run, leave blank for default", value=15000) 
-    fine_tune_cmd = f"python ../scripts/02_train/train.py --name {name} --start_from {model_id} {checkpoint_path} with config_training.yaml training.data={config_path} validation.data={config_path} torch.device=0 training.iterations={iterations}"
+    fine_tune_cmd = f"python ./scripts/02_train/train.py --name {name} --start_from {model_id} {checkpoint_path} with config_training.yaml training.data={config_path} validation.data={config_path} torch.device=0 training.iterations={iterations}"
     run_command(fine_tune_cmd, "Fine-tuning complete!")
     with st.echo():
         st.write("Starting TensorBoard...")
@@ -53,11 +53,11 @@ def download_training_data():
 @handle_exceptions
 def open_config_file_to_view() -> None:
     """Let users view the configuration file"""
-    with open("../scripts/02_train/data_configs/example_finetune_mito.json", "r") as f:
+    with open("./scripts/02_train/data_configs/example_finetune_mito.json", "r") as f:
         data=json.load(f)
         if data is not None:
             st.json(data, expanded=True)
-            st.success("Loaded JSON from ../scripts/02_train/data_configs/example_finetune_mito.json")
+            st.success("Loaded JSON from ./scripts/02_train/data_configs/example_finetune_mito.json")
 
 @handle_exceptions
 def take_input_and_run_fine_tuning() -> None:
@@ -109,35 +109,42 @@ def take_input_and_run_fine_tuning() -> None:
 
     if st.button('Add configuration entry'):
         st.session_state['config_entries'].append({
-            "path": "",
-            "name": "",
-            "raw": "",
-            "labels": {}
+            "nickname": "",
+            "file":"",
+            "offset":[0,0,0],
+            "shape":[0,0,0],
+            "voxel_size":[5,5,5],
+            "raw": "volumes/raw_equalized_0.02",
+            "labels": {
+            "volumes/labels/mito": 1
+            }
         })
 
     for i, entry in enumerate(st.session_state['config_entries']):
         with st.expander(f"Configuration Entry {i+1}"):
-            entry['path'] = st.text_input(f"Enter file path for entry {i+1}", entry['path'])
-            entry['name'] = st.text_input(f"Enter ROI name for entry {i+1}", entry['name'])
+            entry['nickname'] = st.text_input(f"Enter ROI nickname for entry {i+1}", entry['nickname'])
+            entry['file'] = st.text_input(f"Enter file path for entry {i+1}", entry['file'])
+            entry['offset'] = [st.number_input(f"Enter offset z for entry {i+1}", value=entry['offset'][0]),
+                               st.number_input(f"Enter offset y for entry {i+1}", value=entry['offset'][1]),
+                               st.number_input(f"Enter offset x for entry {i+1}", value=entry['offset'][2])]
+            entry['shape'] = [st.number_input(f"Enter shape z for entry {i+1}", value=entry['shape'][0]),
+                              st.number_input(f"Enter shape y for entry {i+1}", value=entry['shape'][1]),
+                              st.number_input(f"Enter shape x for entry {i+1}", value=entry['shape'][2])]
             entry['raw'] = st.text_input(f"Enter raw data path for entry {i+1}", entry['raw'])
-            label_key = st.text_input(f"Enter label key for entry {i+1}", "")
-            label_value = st.number_input(f"Enter label value for entry {i+1}", value=1)
-            if label_key:
-                entry['labels'][label_key] = label_value
+            entry["voxel_size"]=[st.number_input(f"Enter voxel_size z for entry {i+1}", value=entry['voxel_size'][0]),
+                               st.number_input(f"Enter voxel_size y for entry {i+1}", value=entry['voxel_size'][1]),
+                               st.number_input(f"Enter voxel_size x for entry {i+1}", value=entry['voxel_size'][2])]
 
     for entry in st.session_state['config_entries']:
-        config[entry["path"]] = {
-            "name": entry["name"],
-            "raw": entry["raw"],
-            "labels": entry["labels"]
-        }
-
-    file_name = st.text_input("Enter the name of the inference file, default is inference__", f"inference__")
-
-    if st.button('Create Configuration'):
-        config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
-        st.success("Configuration file created successfully!")
-
+        config[entry["nickname"]] = {
+            "file": entry["file"],
+            "offset": entry["offset"],
+            "shape": entry["shape"],
+            "voxel_size": entry["voxel_size"],
+            "raw": entry["raw"]
+        }    
+    file_name=st.text_input("Enter the name of the inference file otherwise the default is prediction_inf_file__", f"prediction_inf_file__")
+    with st.form("fine_tuning_form"):
         st.write("Choose a model")
         model_options = {
             "FIB-SEM Chemical Fixation Mitochondria (CF, 5x5x5)": "1847",
@@ -149,14 +156,44 @@ def take_input_and_run_fine_tuning() -> None:
             "FIB-SEM High-Pressure Freezing Nuclear Pores (HPF, 5x5x5)": "2000"
         }
         model_choice = st.selectbox("Select a model", list(model_options.keys()))
+        submit_button = st.form_submit_button("Run Prediction")
+ 
+
+    if submit_button:
+        config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
+        st.write("Configuration file created successfully!")
+
         model_id = model_options[model_choice]
-        checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
+        checkpoint_path = f"./models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
+        prepare_annotations(input_path=input_path, output_path=output_path)
+        st.success("Annotations prepared successfully!")
+        
+        run_fine_tuning( config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, output_path=output_path)
+        st.success("Prediction process is complete!")
 
-        if st.button('Prepare Annotations', help="For converting tiff to zarr and making a metric exclusion done"):
-            prepare_annotations(input_path=input_path, output_path=output_path)
-            st.success("Annotations prepared successfully!")
-
-        if st.button('Run Fine-Tuning', help="Run the fine tuning"):
-            run_fine_tuning(config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, output_path=output_path)
-            st.success("Fine-tuning process is complete!")
-
+    # if st.button('Create Configuration'):
+    #     config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
+    #     st.success("Configuration file created successfully!")
+    #
+    #     st.write("Choose a model")
+    #     model_options = {
+    #         "FIB-SEM Chemical Fixation Mitochondria (CF, 5x5x5)": "1847",
+    #         "FIB-SEM Chemical Fixation Golgi Apparatus (CF, 5x5x5)": "1837",
+    #         "FIB-SEM Chemical Fixation Endoplasmic Reticulum (CF, 5x5x5)": "1841",
+    #         "FIB-SEM High-Pressure Freezing Mitochondria (HPF, 4x4x4)": "1675",
+    #         "FIB-SEM High-Pressure Freezing Endoplasmic Reticulum (HPF, 4x4x4)": "1669",
+    #         "FIB-SEM High-Pressure Freezing Clathrin-Coated Pits (HPF, 5x5x5)": "1986",
+    #         "FIB-SEM High-Pressure Freezing Nuclear Pores (HPF, 5x5x5)": "2000"
+    #     }
+    #     model_choice = st.selectbox("Select a model", list(model_options.keys()))
+    #     model_id = model_options[model_choice]
+    #     checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
+    #
+    #     if st.button('Prepare Annotations', help="For converting tiff to zarr and making a metric exclusion done"):
+    #         prepare_annotations(input_path=input_path, output_path=output_path)
+    #         st.success("Annotations prepared successfully!")
+    #
+    #     if st.button('Run Fine-Tuning', help="Run the fine tuning"):
+    #         run_fine_tuning()
+    #         st.success("Fine-tuning process is complete!")
+take_input_and_run_fine_tuning()
