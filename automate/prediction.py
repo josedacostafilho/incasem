@@ -3,7 +3,8 @@ import random
 
 import streamlit as st
 from incasem_setup import handle_exceptions
-from utils import create_config_file, run_command, validate_tiff_filename
+from utils import (convert_tiff_to_zarr, create_config_file, run_command,
+                   validate_tiff_filename)
 
 
 @handle_exceptions
@@ -22,18 +23,7 @@ def run_prediction(input_path: str, output_path: str, volume_name: str, config_p
     st.subheader("Run Prediction")
 
     if is_tiff:
-        st.write("Checking the size of the TIFF file...")
-        file_size = os.path.getsize(input_path)
-        st.write(f"File size: {file_size} Gigabytes [Please Enter in Gigabytes otherwise you may have issues, 1 GB = 1000MB]")
-
-        if file_size > 10:  # 10 GB
-            st.write("Large TIFF file detected. Using Dask for conversion...")
-            convert_cmd = f"python ../scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
-        else:
-            st.write("Converting TIFF to zarr format...")
-            convert_cmd = f"python ../scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
-
-        run_command(convert_cmd, "Conversion to zarr format complete!")
+        convert_tiff_to_zarr(input_path=input_path, output_path=output_path, volume_name=volume_name) 
 
     st.write("Equalizing intensity histogram of the data...")
     equalize_cmd = f"python ../scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
@@ -101,8 +91,7 @@ def take_input_and_run_predictions():
             "raw": entry["raw"],
             "labels": entry["labels"]
         }
-    random_file_number=random.randrange(0, 1000)
-    file_name=st.text_input("Enter the name of the inference file otherwise we will generate a random file name for you", f"inference-{random_file_number}")
+    file_name=st.text_input("Enter the name of the inference file otherwise the default is prediction_inf_file__", f"prediction_inf_file__")
 
     if st.button('Create Configuration'):
         config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)

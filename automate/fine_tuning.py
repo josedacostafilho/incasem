@@ -5,7 +5,8 @@ import subprocess
 
 import streamlit as st
 from incasem_setup import handle_exceptions
-from utils import create_config_file, run_command, validate_tiff_filename
+from utils import (convert_tiff_to_zarr, create_config_file, run_command,
+                   validate_tiff_filename)
 
 
 @handle_exceptions
@@ -81,15 +82,20 @@ def take_input_and_run_fine_tuning() -> None:
     st.title("Incasem Fine-Tuning")
     st.write("Welcome to the Incasem fine-tuning interface")
     
+    file_type = st.radio("Select file type", ('TIFF', 'ZARR'))
+
     input_path = st.text_input("Enter the input path for annotations","", help=" You can have it on your local machine, in the ../scripts/02_train/data_configs folder or on the cloud, its empty by default")
     output_path = st.text_input("Enter the output path for zarr format", "", help=" normally its ../scripts/02_train/data_configs")
 
     if st.button('Download Training Data', help="If you want to download some test data, you can choose a path to enter once you click this button"):
         download_training_data()
 
-    if not validate_tiff_filename(input_path):
-        st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
-        return
+    if file_type == 'TIFF':
+        if not validate_tiff_filename(input_path):
+            st.error("Invalid TIFF filename format. Please ensure the filename follows the pattern: .*_(\\d+).*\\.tif$")
+        else:
+            volume_name=st.text_input("Enter the volume name you want to use, default=volumes/raw ", "volumes/raw")
+            convert_tiff_to_zarr(input_path=input_path, output_path=output_path, volume_name=volume_name) 
 
     st.write("Create fine-tuning configuration entries")
     config = {}
