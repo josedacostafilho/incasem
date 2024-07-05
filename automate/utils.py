@@ -27,5 +27,6 @@ def create_config_file(output_path: str, config: dict, file_name:str) -> str:
     return config_path
 
 def validate_tiff_filename(filename: str) -> bool:
+    st.write("We are validating the filename using the proper naming convensions for our code base, if your file has the wrong name, please check our documentation and change it otherwise it will fail to run")
     return bool(re.match(r'.*_(\d+).*\.tif$', filename))
 
