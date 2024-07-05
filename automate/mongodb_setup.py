@@ -17,16 +17,16 @@ def setup_mongodb():
     else:
         with st.echo():
             st.write("MongoDB is not installed. Installing MongoDB ....")
-            subprocess.run("brew tap mongodb/brew", shell=True, check=True)
-            subprocess.run("brew install mongodb-community@4.4", shell=True, check=True)
+            subprocess.run("brew tap mongodb/brew", shell=True)
+            subprocess.run("brew install mongodb-community@4.4", shell=True)
     
     st.write("Starting MongoDB service...")
     with st.echo():
-        subprocess.run("brew services start mongodb-community", shell=True, check=True)
+        subprocess.run("brew services start mongodb-community", shell=True)
     
     st.write("Downloading models...")
     with st.echo():
-        subprocess.run("cd ../incasem; python download_models.py", shell=True, check=True)
+        subprocess.run("cd ../; python download_models.py", shell=True)
     
     st.write("MongoDB setup complete!")
 

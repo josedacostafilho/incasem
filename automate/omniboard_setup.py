@@ -11,9 +11,9 @@ def setup_omniboard():
         st.subheader("Setup Omniboard")
         
         st.write("Setting up Node.js environment and installing Omniboard...")
-        subprocess.run("pip install nodeenv", shell=True, check=True)
-        subprocess.run("cd ../; nodeenv omniboard_environment", shell=True, check=True)
-        subprocess.run("source omniboard_environment/bin/activate", shell=True, check=True)
-        subprocess.run("npm install -g omniboard", shell=True, check=True)
+        subprocess.run("pip install nodeenv", shell=True )
+        subprocess.run("cd ../; nodeenv omniboard_environment", shell=True)
+        subprocess.run("source omniboard_environment/bin/activate", shell=True )
+        subprocess.run("npm install -g omniboard", shell=True)
         
         st.write("Omniboard setup complete!")
