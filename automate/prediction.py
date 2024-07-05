@@ -24,19 +24,19 @@ def run_prediction(input_path: str, output_path: str, volume_name: str, config_p
 
     if is_tiff:
         convert_tiff_to_zarr(input_path=input_path, output_path=output_path, volume_name=volume_name) 
+    else:
+        st.write("Equalizing intensity histogram of the data...")
+        equalize_cmd = f"python ../scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
+        run_command(equalize_cmd, "Histogram equalization complete!")
 
-    st.write("Equalizing intensity histogram of the data...")
-    equalize_cmd = f"python ../scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
-    run_command(equalize_cmd, "Histogram equalization complete!")
+        if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
+            st.write("Opening Neuroglancer...")
+            neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
+            run_command(neuroglancer_cmd, "Neuroglancer opened!")
 
-    if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
-        st.write("Opening Neuroglancer...")
-        neuroglancer_cmd = f"neuroglancer -f {output_path} -d volumes/raw_equalized_0.02"
-        run_command(neuroglancer_cmd, "Neuroglancer opened!")
-
-    st.write("Running prediction...")
-    predict_cmd = f"python ../scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
-    run_command(predict_cmd, "Prediction complete!")
+        st.write("Running prediction...")
+        predict_cmd = f"python ../scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
+        run_command(predict_cmd, "Prediction complete!")
 
 @handle_exceptions
 def take_input_and_run_predictions():
@@ -69,35 +69,40 @@ def take_input_and_run_predictions():
 
     if st.button('Add configuration entry'):
         st.session_state['config_entries'].append({
-            "path": "",
-            "name": "",
-            "raw": "",
-            "labels": {}
+            "nickname": "",
+            "file":"",
+            "offset":[0,0,0],
+            "shape":[0,0,0],
+            "voxel_size":[5,5,5],
+            "raw": "volumes/raw_equalized_0.02"
         })
 
     for i, entry in enumerate(st.session_state['config_entries']):
         with st.expander(f"Configuration Entry {i+1}"):
-            entry['path'] = st.text_input(f"Enter file path for entry {i+1}", entry['path'])
-            entry['name'] = st.text_input(f"Enter ROI name for entry {i+1}", entry['name'])
+            entry['nickname'] = st.text_input(f"Enter ROI nickname for entry {i+1}", entry['nickname'])
+            entry['file'] = st.text_input(f"Enter file path for entry {i+1}", entry['file'])
+            entry['offset'] = [st.number_input(f"Enter offset z for entry {i+1}", value=entry['offset'][0]),
+                               st.number_input(f"Enter offset y for entry {i+1}", value=entry['offset'][1]),
+                               st.number_input(f"Enter offset x for entry {i+1}", value=entry['offset'][2])]
+            entry['shape'] = [st.number_input(f"Enter shape z for entry {i+1}", value=entry['shape'][0]),
+                              st.number_input(f"Enter shape y for entry {i+1}", value=entry['shape'][1]),
+                              st.number_input(f"Enter shape x for entry {i+1}", value=entry['shape'][2])]
             entry['raw'] = st.text_input(f"Enter raw data path for entry {i+1}", entry['raw'])
-            label_key = st.text_input(f"Enter label key for entry {i+1}", "")
-            label_value = st.number_input(f"Enter label value for entry {i+1}", value=1)
-            if label_key:
-                entry['labels'][label_key] = label_value
+            entry["voxel_size"]=[st.number_input(f"Enter voxel_size z for entry {i+1}", value=entry['voxel_size'][0]),
+                               st.number_input(f"Enter voxel_size y for entry {i+1}", value=entry['voxel_size'][1]),
+                               st.number_input(f"Enter voxel_size x for entry {i+1}", value=entry['voxel_size'][2])]
+
 
     for entry in st.session_state['config_entries']:
-        config[entry["path"]] = {
-            "name": entry["name"],
-            "raw": entry["raw"],
-            "labels": entry["labels"]
-        }
+        config[entry["nickname"]] = {
+            "file": entry["file"],
+            "offset": entry["offset"],
+            "shape": entry["shape"],
+            "voxel_size": entry["voxel_size"],
+            "raw": entry["raw"]
+        }    
     file_name=st.text_input("Enter the name of the inference file otherwise the default is prediction_inf_file__", f"prediction_inf_file__")
-
-    if st.button('Create Configuration'):
-        config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
-
-        st.write("Configuration file created successfully!")
-
+    with st.form("prediction_form"):
         st.write("Choose a model")
         model_options = {
             "FIB-SEM Chemical Fixation Mitochondria (CF, 5x5x5)": "1847",
@@ -109,11 +114,14 @@ def take_input_and_run_predictions():
             "FIB-SEM High-Pressure Freezing Nuclear Pores (HPF, 5x5x5)": "2000"
         }
         model_choice = st.selectbox("Select a model", list(model_options.keys()))
+        submit_button = st.form_submit_button("Run Prediction")
+
+    if submit_button:
+        config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
+        st.write("Configuration file created successfully!")
+
         model_id = model_options[model_choice]
         checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
 
-        if st.button('Run Prediction'):
-            run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name, config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=(file_type == 'TIFF'))
-            st.success("Prediction process is complete!")
-
-
+        run_prediction(input_path=input_path, output_path=output_path, volume_name=volume_name, config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, is_tiff=(file_type == 'TIFF'))
+        st.success("Prediction process is complete!")

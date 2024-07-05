@@ -1,7 +1,9 @@
 import logging
-import numpy as np
-from incasem.utils import equalize_adapthist
+
 import gunpowder as gp
+import numpy as np
+
+from ../utils import equalize_adapthist
 
 logger = logging.getLogger(__name__)
 

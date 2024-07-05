@@ -69,7 +69,7 @@ def setup_environment(env_name: str) -> None:
         st.write("Creating the conda environment with name: {env_name} (This may take a few minutes)")
         subprocess.run(f"conda create --name {env_name} python=3.11 -y", shell=True, check=True)
         subprocess.run(cmd, shell=True, check=True)
-        install_cmd=f"pip3 quilt3 install pipreqs watchdog streamlit bandit[toml] logging" 
+        install_cmd=f"pip3 quilt3 install configargparse pipreqs watchdog streamlit bandit[toml] logging" 
         get_reqs="pipreqs ../."
         install_reqs="python3 -m pip install -r ../requirements.txt"
         subprocess.run(install_cmd, shell=True, check=True)
