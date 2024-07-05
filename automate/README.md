@@ -4,5 +4,5 @@ From your terminal copy and paste the following commands to run incasem from the
 
 ```
 pip install streamlit
-streamlit run main.py
+streamlit run automate/main.py
 ```

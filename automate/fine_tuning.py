@@ -173,29 +173,4 @@ def take_input_and_run_fine_tuning() -> None:
         run_fine_tuning( config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, output_path=output_path)
         st.success("Prediction process is complete!")
 
-    # if st.button('Create Configuration'):
-    #     config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
-    #     st.success("Configuration file created successfully!")
-    #
-    #     st.write("Choose a model")
-    #     model_options = {
-    #         "FIB-SEM Chemical Fixation Mitochondria (CF, 5x5x5)": "1847",
-    #         "FIB-SEM Chemical Fixation Golgi Apparatus (CF, 5x5x5)": "1837",
-    #         "FIB-SEM Chemical Fixation Endoplasmic Reticulum (CF, 5x5x5)": "1841",
-    #         "FIB-SEM High-Pressure Freezing Mitochondria (HPF, 4x4x4)": "1675",
-    #         "FIB-SEM High-Pressure Freezing Endoplasmic Reticulum (HPF, 4x4x4)": "1669",
-    #         "FIB-SEM High-Pressure Freezing Clathrin-Coated Pits (HPF, 5x5x5)": "1986",
-    #         "FIB-SEM High-Pressure Freezing Nuclear Pores (HPF, 5x5x5)": "2000"
-    #     }
-    #     model_choice = st.selectbox("Select a model", list(model_options.keys()))
-    #     model_id = model_options[model_choice]
-    #     checkpoint_path = f"../models/pretrained_checkpoints/model_checkpoint_{model_id}_er_CF.pt"
-    #
-    #     if st.button('Prepare Annotations', help="For converting tiff to zarr and making a metric exclusion done"):
-    #         prepare_annotations(input_path=input_path, output_path=output_path)
-    #         st.success("Annotations prepared successfully!")
-    #
-    #     if st.button('Run Fine-Tuning', help="Run the fine tuning"):
-    #         run_fine_tuning()
-    #         st.success("Fine-tuning process is complete!")
-take_input_and_run_fine_tuning()
+
