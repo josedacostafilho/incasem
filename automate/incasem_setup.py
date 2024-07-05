@@ -61,23 +61,27 @@ def setup_conda():
 @handle_exceptions
 def setup_environment(env_name: str) -> None:
     st.subheader(f"Setting up the conda environment: {env_name}")
-    cmd=f"conda init && source ~/.bashrc && conda activate {env_name}"
+    cmd=f"conda init" 
+    cmd2="conda activate {env_name}"
     if is_env_active(env_name):
         st.write(f"Environment {env_name} exists")
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd, shell=True)
+        output=subprocess.run(cmd, shell=True)
+        st.success(output.stdout)
     else:
         st.write("Creating the conda environment with name: {env_name} (This may take a few minutes)")
         subprocess.run(f"conda create --name {env_name} python=3.11 -y", shell=True, check=True)
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd, shell=True)
+        subprocess.run(cmd2, shell=True)
         install_cmd=f"pip3 quilt3 install configargparse pipreqs watchdog streamlit bandit[toml] logging" 
         get_reqs="pipreqs ../."
         install_reqs="python3 -m pip install -r ../requirements.txt"
-        subprocess.run(install_cmd, shell=True, check=True)
-        subprocess.run(get_reqs, shell=True, check=True)
-        subprocess.run(install_reqs, shell=True, check=True)
+        subprocess.run(install_cmd, shell=True)
+        subprocess.run(get_reqs, shell=True )
+        subprocess.run(install_reqs, shell=True)
 
 @handle_exceptions
 def export_env():
     generate_env="conda env export > environment.yml && mv environment.yml ../"
-    subprocess.run(generate_env, shell=True, check=True)
+    subprocess.run(generate_env, shell=True)
     st.write("Environment setup is complete!")
