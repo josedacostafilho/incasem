@@ -42,9 +42,12 @@ def download_training_data():
     """Code to create a text box for users to input the location of data they want to download"""
     st.write("Downloading training data...")
     path=st.text_input("Please enter the path to your dataset, eg(s3://path-to-your-dataset/cell3.zarr", "")
-    download_cmd = f"aws s3 cp  {path} ../data/ --recursive"
-    run_command(download_cmd, "Download complete!")
-    st.success("We were successfully able to download the sample data to the location ../data/ in the codebase!")
+    download_cmd = f"aws s3 cp {path} ../data/ --recursive"
+    if st.button("Run Command"):
+        run_command(download_cmd, "Download complete!")
+        st.success("We were successfully able to download the sample data to the location ../data/ in the codebase!")
+    elif st.button("Continue without downloading.. "):
+        return
 
 @handle_exceptions
 def open_config_file_to_view() -> None:
@@ -123,8 +126,7 @@ def take_input_and_run_fine_tuning() -> None:
             "labels": entry["labels"]
         }
 
-    random_file_number = random.randrange(0, 1000)
-    file_name = st.text_input("Enter the name of the inference file otherwise we will generate a random file name for you", f"inference-{random_file_number}")
+    file_name = st.text_input("Enter the name of the inference file, default is inference__", f"inference__")
 
     if st.button('Create Configuration'):
         config_path = create_config_file(output_path=output_path, config=config, file_name=file_name)
@@ -152,8 +154,3 @@ def take_input_and_run_fine_tuning() -> None:
             run_fine_tuning(config_path=config_path, model_id=model_id, checkpoint_path=checkpoint_path, output_path=output_path)
             st.success("Fine-tuning process is complete!")
 
-# def main():
-#     take_input_and_run_fine_tuning()
-#
-# if __name__ == '__main__':
-#     main()

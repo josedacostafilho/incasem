@@ -15,6 +15,15 @@ DATA_CONFIG_PATH = "../scripts/02_train/data_configs/"
 
 @handle_exceptions
 def run_training(train_config_path: str, val_config_path: str, model_name: str, cell_paths: list):
+    """
+    Run the training process for the model.
+
+    :param train_config_path: Path to the training configuration file.
+    :param val_config_path: Path to the validation configuration file.
+    :param model_name: Name of the model to be trained.
+    :param cell_paths: List of cell paths.
+    :func:`run_command`
+    """
     st.subheader("Run Training")
 
     st.write("Creating metric masks...")
@@ -27,7 +36,14 @@ def run_training(train_config_path: str, val_config_path: str, model_name: str, 
     train_cmd = f"python ../scripts/02_train/train.py --name {model_name} with config_train.yaml 'train.data={train_config_path}' 'train.validation={val_config_path}'"
     run_command(train_cmd, "Training complete!")
 
+
 def validate_path(path: str) -> bool:
+    """
+    Validate if the given path exists.
+
+    :param path: Path to validate.
+    :return: True if the path exists, False otherwise.
+    """
     if os.path.exists(path):
         return True
     else:
@@ -35,9 +51,56 @@ def validate_path(path: str) -> bool:
         return False
 
 def get_available_json_files(path: str):
+    """
+    Get a list of available JSON files in the given directory.
+
+    :param path: Directory path to search for JSON files.
+    :return: List of JSON file names.
+    """
     return [f for f in os.listdir(path) if f.endswith('.json')]
 
+@handle_exceptions
 def take_input_and_create_configs():
+
+    """
+    @Title - Training Configuration Workflow
+    @Description:
+    This function facilitates the training configuration process for models using user-provided data. The workflow includes creating training and validation configuration entries, validating paths, and selecting configuration files for running the training process.
+
+    Steps Involved:
+
+    1. **Create Training and Validation Entries:**
+       - User provides names, file paths, offsets, shapes, voxel sizes, raw data paths, metric masks, and labels for both training and validation entries.
+
+    2. **Create Configuration Files:**
+       - Users can create training and validation configuration files with the provided entries.
+
+    3. **Run Training Process:**
+       - Users select existing configuration files for training and validation.
+       - Provide cell paths for training.
+       - Validate the provided paths.
+       - Run the training process with the selected configuration files and model name.
+
+    Code Workflow:
+
+    1. **Create Training and Validation Entries:**
+       - Ask users to add training and validation entries, providing details such as names, file paths, offsets, shapes, voxel sizes, raw data paths, metric masks, and labels.
+
+    2. **Create Configuration Files:**
+       - Allow users to create configuration files with the provided entries and specify names for the configuration files.
+       - Create the configuration files and display a success message.
+
+    3. **Select Configuration Files:**
+       - Display available JSON configuration files for training and validation.
+       - Allow users to select the configuration files for the training process.
+
+    4. **Provide Cell Paths:**
+       - Users provide cell paths for training.
+       - Validate the provided paths.
+
+    5. **Run Training:**
+       - Run the training process with the selected configuration files and model name.
+    """
     st.title("Incasem Training Configuration")
     st.write("Create training and validation configuration entries")
 
@@ -124,7 +187,7 @@ def take_input_and_create_configs():
         st.success("Configuration files created successfully!")
         run_training_from_configs()
         
-
+@handle_exceptions
 def run_training_from_configs():
     st.title("Run Training")
     st.write("Select existing configuration files for training and validation")

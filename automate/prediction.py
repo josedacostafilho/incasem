@@ -8,24 +8,35 @@ from utils import create_config_file, run_command, validate_tiff_filename
 
 @handle_exceptions
 def run_prediction(input_path: str, output_path: str, volume_name: str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
+    """Run prediction on the given input data, converting TIFF to zarr if necessary, and optionally visualizing the data in Neuroglancer.
+    
+    Args:
+        input_path (str): The input path for the data.
+        output_path (str): The output path for the results.
+        volume_name (str): The name of the volume to be predicted.
+        config_path (str): The path to the prediction configuration file.
+        model_id (str): The ID of the model to use for prediction.
+        checkpoint_path (str): The path to the model checkpoint file.
+        is_tiff (bool): Indicates whether the input data is in TIFF format.
+    """
     st.subheader("Run Prediction")
 
     if is_tiff:
         st.write("Checking the size of the TIFF file...")
         file_size = os.path.getsize(input_path)
-        st.write(f"File size: {file_size} bytes")
+        st.write(f"File size: {file_size} Gigabytes [Please Enter in Gigabytes otherwise you may have issues, 1 GB = 1000MB]")
 
-        if file_size > 10 * 1024 * 1024:  # 10 GB
+        if file_size > 10:  # 10 GB
             st.write("Large TIFF file detected. Using Dask for conversion...")
-            convert_cmd = f"python ../incasem/scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
+            convert_cmd = f"python ../scripts/01_data_formatting/01_image_sequences_to_zarr_with_dask.py -i {input_path} -f {output_path} -d volumes/raw --resolution 5 5 5"
         else:
             st.write("Converting TIFF to zarr format...")
-            convert_cmd = f"python ../incasem/scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
+            convert_cmd = f"python ../scripts/01_data_formatting/00_image_sequences_to_zarr.py -i {input_path} -f {output_path}"
 
         run_command(convert_cmd, "Conversion to zarr format complete!")
 
     st.write("Equalizing intensity histogram of the data...")
-    equalize_cmd = f"python ../incasem/scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
+    equalize_cmd = f"python ../scripts/01_data_formatting/40_equalize_histogram.py -f {output_path} -d volumes/raw -o volumes/raw_equalized_0.02"
     run_command(equalize_cmd, "Histogram equalization complete!")
 
     if st.checkbox("Do you want to visualize the data in Neuroglancer?"):
@@ -34,10 +45,19 @@ def run_prediction(input_path: str, output_path: str, volume_name: str, config_p
         run_command(neuroglancer_cmd, "Neuroglancer opened!")
 
     st.write("Running prediction...")
-    predict_cmd = f"python ../incasem/scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
+    predict_cmd = f"python ../scripts/03_predict/predict.py --run_id {model_id} --name example_prediction with config_prediction.yaml 'prediction.data={config_path}' 'prediction.checkpoint={checkpoint_path}'"
     run_command(predict_cmd, "Prediction complete!")
 
+@handle_exceptions
 def take_input_and_run_predictions():
+    """Gather user inputs and run predictions based on the provided configuration.
+
+    This function:
+    1. Takes user inputs for file type, input path, output path, and volume name.
+    2. Validates the TIFF filename if the input is in TIFF format.
+    3. Allows users to create prediction configuration entries.
+    4. Creates a configuration file and runs the prediction based on the selected model[See :func `run_prediction`].
+    """
     st.title("Incasem Prediction")
     st.write("Welcome to the Incasem prediction interface")
 
