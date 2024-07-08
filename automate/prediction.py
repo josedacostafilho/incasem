@@ -11,8 +11,7 @@ from view import view_cells_and_flatten_them
 
 @handle_exceptions
 def run_prediction(input_path: str, output_path: str, volume_name: str, config_path: str, model_id: str, checkpoint_path: str, is_tiff: bool):
-    """Run prediction on the given input data, converting TIFF to zarr if necessary, and optionally visualizing the data in Neuroglancer.
-    
+    """Run prediction on the given input data, converting TIFF to zarr if necessary, and visualize the data in Neuroglancer.
     Args:
         input_path (str): The input path for the data.
         output_path (str): The output path for the results.

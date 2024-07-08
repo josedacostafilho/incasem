@@ -65,22 +65,6 @@ def take_input_and_create_configs():
     """
     @Title - Training Configuration Workflow
     @Description:
-    This function facilitates the training configuration process for models using user-provided data. The workflow includes creating training and validation configuration entries, validating paths, and selecting configuration files for running the training process.
-
-    Steps Involved:
-
-    1. **Create Training and Validation Entries:**
-       - User provides names, file paths, offsets, shapes, voxel sizes, raw data paths, metric masks, and labels for both training and validation entries.
-
-    2. **Create Configuration Files:**
-       - Users can create training and validation configuration files with the provided entries.
-
-    3. **Run Training Process:**
-       - Users select existing configuration files for training and validation.
-       - Provide cell paths for training.
-       - Validate the provided paths.
-       - Run the training process with the selected configuration files and model name.
-
     Code Workflow:
 
     1. **Create Training and Validation Entries:**

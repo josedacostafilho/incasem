@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 # incasem_v2
-=======
 # <ins>A</ins>utomated <ins>S</ins>egmentation of cellular substructures in <ins>E</ins>lectron <ins>M</ins>icroscopy (ASEM)
 
 https://user-images.githubusercontent.com/8866751/200858874-af9220c9-60ac-4b3b-9b45-181d266f82b0.mp4
@@ -591,4 +589,3 @@ and paste `localhost:9000` into your browser.
 
 #### 7. Pick a model for prediction
 Using Omniboard, pick a model iteration where the validation loss and the validation F1 score have converged. Now use this model to generate predictions on new data, as described in the section [_Prediction_](#Prediction).
->>>>>>> 07374a1 (.)
